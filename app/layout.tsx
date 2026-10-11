@@ -11,7 +11,7 @@ import Link from "next/link"
 
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Toaster } from "@/components/ui/toast"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
@@ -63,13 +63,12 @@ export default function RootLayout({
                       </SignUpButton>
                     </Show>
                     <Show when="signed-in">
-                      <Button
-                        render={<Link href="/dashboard" />}
-                        variant="ghost"
-                        size="sm"
+                      <Link
+                        href="/dashboard"
+                        className={buttonVariants({ variant: "ghost", size: "sm" })}
                       >
                         Dashboard
-                      </Button>
+                      </Link>
                       <UserButton />
                     </Show>
                   </div>
