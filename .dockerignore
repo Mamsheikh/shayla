@@ -1,0 +1,7 @@
+.claude
+.agents
+.git
+node_modules
+.next
+.env*
+.clerk
