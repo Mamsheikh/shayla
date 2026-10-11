@@ -25,8 +25,10 @@ import { Button } from "@/components/ui/button";
 Drizzle uses Neon Postgres. Set `DATABASE_URL` to the pooled connection string and
 `DATABASE_URL_UNPOOLED` to the direct connection string in `.env.local`. The
 runtime database client is available through `getDb()` from `@/db` in server
-code. The `todos` table stores a Clerk `userId`, a title, completion status,
-and creation time. Scope todo queries to the authenticated user's ID.
+code. The `bots` table stores a Clerk `userId`, bot identity, job,
+instructions, optional sandbox ID, and creation time. Drizzle generates the
+`id` and `avatar` Nano IDs when inserting a bot. Scope bot queries to the
+authenticated user's ID.
 
 Edit tables in `db/schema.ts`, then push the schema to Neon:
 
