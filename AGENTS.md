@@ -14,6 +14,16 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - For database schema changes, use `npm run db:push` (`drizzle-kit push`) only. Never generate or run migrations.
 - This is a development project. Existing data has no value, and backward compatibility is not required. Treat every schema change as a clean slate: discard existing rows; never backfill or preserve them, and spend no effort keeping old data working.
 
+## Forms
+
+Reference: `db/schema.ts` (`createBotSchema`), `action/bots.ts` (`createBot`), and `components/bots-dialog.tsx`.
+
+- Derive database-backed validation with `createInsertSchema` from `drizzle-zod`. Define a client-editable subset with field constraints, excluding generated and server-owned columns. Export its inferred type and use the same schema with `zodResolver` in the form and `.parse()` in the server action.
+- Use React Hook Form with explicit defaults for every field. Compose installed shadcn controls with `FieldGroup`, `Controller`, and `Field`; put `data-invalid` on `Field`, `aria-invalid` on the control, and show `FieldError` for invalid fields.
+- Use `ToggleGroup` for a small set of suggestions. Each suggestion should fill all related fields it promises (a bot job fills `job` and `instructions`), while leaving `name` blank and allowing edits to prefilled fields.
+- In server actions, derive `userId` from Clerk's authenticated session, validate input again, and revalidate affected routes after a successful mutation. Treat client input as untrusted.
+- In creation dialogs, reset form state when closing. Keep submit and cancel controls inside the form, disable actions while submitting, and report success or failure with the installed toast component. Keep native button semantics when composing Base UI triggers with `render`.
+
 ## DiceBear
 
 Use DiceBear 10. Documentation: https://www.dicebear.com/llms.txt

@@ -1,9 +1,8 @@
 import { auth } from "@clerk/nextjs/server"
-import { PlusIcon } from "lucide-react"
 import { connection } from "next/server"
 
+import { BotsDialog } from "@/components/bots-dialog"
 import { ChatAvatar } from "@/components/chat-avatar"
-import { Button } from "@/components/ui/button"
 import {
   Empty,
   EmptyContent,
@@ -34,10 +33,7 @@ export default async function Page() {
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <Button variant="secondary" size="lg" className="h-12 px-5 text-base">
-            <PlusIcon data-icon="inline-start" />
-            Create a new bot
-          </Button>
+          <BotsDialog initialSeed={avatarSeed} />
         </EmptyContent>
       </Empty>
     </main>
