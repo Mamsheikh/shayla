@@ -1,13 +1,24 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { UserButton } from "@clerk/nextjs"
 import { formatDistanceToNowStrict } from "date-fns"
-import { PlusIcon, UsersRoundIcon } from "lucide-react"
+import { PlusIcon, SearchIcon, UsersRoundIcon } from "lucide-react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 import { BotsDialog } from "@/components/bots-dialog"
 import { ChatAvatar } from "@/components/chat-avatar"
 import { Button } from "@/components/ui/button"
+import {
+  Command,
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,6 +26,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Kbd, KbdGroup } from "@/components/ui/kbd"
 
 import {
   Sidebar,
@@ -30,38 +42,68 @@ import {
 import type { DirectChat } from "@/queries/bots"
 
 export function AppSidebar({ chats }: { chats: DirectChat[] }) {
+  const router = useRouter()
   const [botDialogOpen, setBotDialogOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
   const [avatarSeed, setAvatarSeed] = useState<string | null>(null)
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key.toLowerCase() === "k" && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault()
+        setSearchOpen((open) => !open)
+      }
+    }
+
+    document.addEventListener("keydown", onKeyDown)
+    return () => document.removeEventListener("keydown", onKeyDown)
+  }, [])
 
   return (
     <Sidebar>
-      <SidebarHeader className="flex-row justify-end">
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <Button variant="ghost" size="icon-lg" aria-label="Create" />
-            }
-          >
-            <PlusIcon />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="min-w-56">
-            <DropdownMenuGroup>
-              <DropdownMenuItem
-                onClick={() => {
-                  setAvatarSeed((seed) => seed ?? crypto.randomUUID())
-                  setBotDialogOpen(true)
-                }}
-              >
-                <PlusIcon />
-                Create new bot
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <UsersRoundIcon />
-                Create group chat
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
+      <SidebarHeader>
+        <div className="flex justify-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button variant="ghost" size="icon-lg" aria-label="Create" />
+              }
+            >
+              <PlusIcon />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-56">
+              <DropdownMenuGroup>
+                <DropdownMenuItem
+                  onClick={() => {
+                    setAvatarSeed((seed) => seed ?? crypto.randomUUID())
+                    setBotDialogOpen(true)
+                  }}
+                >
+                  <PlusIcon />
+                  Create new bot
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <UsersRoundIcon />
+                  Create group chat
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+        <Button
+          variant="ghost"
+          onClick={() => setSearchOpen(true)}
+          aria-label="Search chats"
+          aria-keyshortcuts="Meta+K Control+K"
+          className="h-8 w-full min-w-0 justify-start gap-2 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base font-normal text-muted-foreground transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80"
+        >
+          <SearchIcon data-icon="inline-start" />
+          <span className="flex-1 text-left">Search</span>
+          <KbdGroup aria-hidden="true">
+            <Kbd>⌘</Kbd>
+            <Kbd>K</Kbd>
+          </KbdGroup>
+        </Button>
         {avatarSeed && (
           <BotsDialog
             initialSeed={avatarSeed}
@@ -70,6 +112,57 @@ export function AppSidebar({ chats }: { chats: DirectChat[] }) {
           />
         )}
       </SidebarHeader>
+      <CommandDialog
+        open={searchOpen}
+        onOpenChange={setSearchOpen}
+        title="Search chats"
+        description="Search your chats by name or recent message."
+      >
+        <Command>
+          <CommandInput placeholder="Search chats..." autoFocus />
+          <CommandList>
+            <CommandEmpty>No chats found.</CommandEmpty>
+            <CommandGroup heading="Chats">
+              {chats.map((chat) => (
+                <CommandItem
+                  key={chat.id}
+                  value={`${chat.name} ${chat.preview ?? ""}`}
+                  className="min-h-14"
+                  onSelect={() => {
+                    setSearchOpen(false)
+                    router.push(`/chats/${encodeURIComponent(chat.id)}`)
+                  }}
+                >
+                  <ChatAvatar
+                    seed={chat.avatarSeed}
+                    className="size-9 shrink-0"
+                  />
+                  <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                    <span className="flex min-w-0 items-center gap-2">
+                      <span className="min-w-0 flex-1 truncate font-medium">
+                        {chat.name}
+                      </span>
+                      <time
+                        dateTime={chat.lastMessageAt}
+                        className="shrink-0 text-xs text-muted-foreground"
+                      >
+                        {formatDistanceToNowStrict(
+                          new Date(chat.lastMessageAt)
+                        )}
+                      </time>
+                    </span>
+                    {chat.preview && (
+                      <span className="truncate text-muted-foreground">
+                        {chat.preview}
+                      </span>
+                    )}
+                  </span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </CommandDialog>
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
@@ -77,7 +170,12 @@ export function AppSidebar({ chats }: { chats: DirectChat[] }) {
               {chats.map((chat) => (
                 <SidebarMenuItem key={chat.id}>
                   <SidebarMenuButton
-                    render={<div />}
+                    render={
+                      <Link
+                        href={`/chats/${encodeURIComponent(chat.id)}`}
+                        prefetch={false}
+                      />
+                    }
                     size="lg"
                     className="h-auto min-h-14"
                   >
