@@ -57,8 +57,17 @@ const suggestedJobs = [
   },
 ]
 
-export function BotsDialog({ initialSeed }: { initialSeed: string }) {
-  const [open, setOpen] = useState(false)
+export function BotsDialog({
+  initialSeed,
+  open: controlledOpen,
+  onOpenChange,
+}: {
+  initialSeed: string
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+}) {
+  const [internalOpen, setInternalOpen] = useState(false)
+  const open = controlledOpen ?? internalOpen
   const form = useForm<CreateBotInput>({
     resolver: zodResolver(createBotSchema),
     defaultValues: {
@@ -73,7 +82,10 @@ export function BotsDialog({ initialSeed }: { initialSeed: string }) {
   const isSubmitting = form.formState.isSubmitting
 
   function handleOpenChange(nextOpen: boolean) {
-    setOpen(nextOpen)
+    if (controlledOpen === undefined) {
+      setInternalOpen(nextOpen)
+    }
+    onOpenChange?.(nextOpen)
     if (!nextOpen) {
       form.reset({
         avatar: crypto.randomUUID(),
@@ -99,18 +111,20 @@ export function BotsDialog({ initialSeed }: { initialSeed: string }) {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger
-        render={
-          <Button
-            variant="secondary"
-            size="lg"
-            className="h-12 px-5 text-base"
-          />
-        }
-      >
-        <PlusIcon data-icon="inline-start" />
-        Create a new bot
-      </DialogTrigger>
+      {controlledOpen === undefined && (
+        <DialogTrigger
+          render={
+            <Button
+              variant="secondary"
+              size="lg"
+              className="h-12 px-5 text-base"
+            />
+          }
+        >
+          <PlusIcon data-icon="inline-start" />
+          Create a new bot
+        </DialogTrigger>
+      )}
       <DialogContent className="max-h-[calc(100dvh-2rem)] gap-6 overflow-y-auto p-6 sm:max-w-[720px]">
         <DialogHeader>
           <DialogTitle className="text-xl">New bot</DialogTitle>

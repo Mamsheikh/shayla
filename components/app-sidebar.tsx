@@ -1,18 +1,117 @@
+"use client"
+
+import { useState } from "react"
 import { UserButton } from "@clerk/nextjs"
+import { formatDistanceToNowStrict } from "date-fns"
+import { PlusIcon, UsersRoundIcon } from "lucide-react"
+
+import { BotsDialog } from "@/components/bots-dialog"
+import { ChatAvatar } from "@/components/chat-avatar"
+import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import type { DirectChat } from "@/queries/bots"
 
-export function AppSidebar() {
+export function AppSidebar({ chats }: { chats: DirectChat[] }) {
+  const [botDialogOpen, setBotDialogOpen] = useState(false)
+  const [avatarSeed, setAvatarSeed] = useState<string | null>(null)
+
   return (
     <Sidebar>
-      <SidebarContent />
+      <SidebarHeader className="flex-row justify-end">
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={
+              <Button variant="ghost" size="icon-lg" aria-label="Create" />
+            }
+          >
+            <PlusIcon />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="min-w-56">
+            <DropdownMenuGroup>
+              <DropdownMenuItem
+                onClick={() => {
+                  setAvatarSeed((seed) => seed ?? crypto.randomUUID())
+                  setBotDialogOpen(true)
+                }}
+              >
+                <PlusIcon />
+                Create new bot
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <UsersRoundIcon />
+                Create group chat
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        {avatarSeed && (
+          <BotsDialog
+            initialSeed={avatarSeed}
+            open={botDialogOpen}
+            onOpenChange={setBotDialogOpen}
+          />
+        )}
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {chats.map((chat) => (
+                <SidebarMenuItem key={chat.id}>
+                  <SidebarMenuButton
+                    render={<div />}
+                    size="lg"
+                    className="h-auto min-h-14"
+                  >
+                    <ChatAvatar
+                      seed={chat.avatarSeed}
+                      className="size-9 shrink-0"
+                    />
+                    <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                      <span className="flex min-w-0 items-center gap-2">
+                        <span className="min-w-0 flex-1 truncate font-medium">
+                          {chat.name}
+                        </span>
+                        <time
+                          dateTime={chat.lastMessageAt}
+                          className="shrink-0 text-xs text-muted-foreground"
+                        >
+                          {formatDistanceToNowStrict(
+                            new Date(chat.lastMessageAt)
+                          )}
+                        </time>
+                      </span>
+                      {chat.preview && (
+                        <span className="truncate text-muted-foreground">
+                          {chat.preview}
+                        </span>
+                      )}
+                    </span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
