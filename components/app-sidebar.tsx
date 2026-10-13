@@ -38,6 +38,8 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarRail,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import type { DirectChat } from "@/queries/bots"
 
@@ -46,6 +48,8 @@ export function AppSidebar({ chats }: { chats: DirectChat[] }) {
   const [botDialogOpen, setBotDialogOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [avatarSeed, setAvatarSeed] = useState<string | null>(null)
+  const { state, isMobile } = useSidebar()
+  const iconOnly = state === "collapsed" && !isMobile
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -60,13 +64,18 @@ export function AppSidebar({ chats }: { chats: DirectChat[] }) {
   }, [])
 
   return (
-    <Sidebar>
+    <Sidebar collapsible="icon">
       <SidebarHeader>
         <div className="flex justify-end">
           <DropdownMenu>
             <DropdownMenuTrigger
               render={
-                <Button variant="ghost" size="icon-lg" aria-label="Create" />
+                <Button
+                  variant="ghost"
+                  size="icon-lg"
+                  aria-label="Create"
+                  className="group-data-[collapsible=icon]:size-8"
+                />
               }
             >
               <PlusIcon />
@@ -92,17 +101,26 @@ export function AppSidebar({ chats }: { chats: DirectChat[] }) {
         </div>
         <Button
           variant="ghost"
+          size={iconOnly ? "icon" : "default"}
           onClick={() => setSearchOpen(true)}
           aria-label="Search chats"
           aria-keyshortcuts="Meta+K Control+K"
-          className="h-8 w-full min-w-0 justify-start gap-2 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base font-normal text-muted-foreground transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80"
+          className={
+            iconOnly
+              ? "size-8"
+              : "h-8 w-full min-w-0 justify-start gap-2 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base font-normal text-muted-foreground transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80"
+          }
         >
           <SearchIcon data-icon="inline-start" />
-          <span className="flex-1 text-left">Search</span>
-          <KbdGroup aria-hidden="true">
-            <Kbd>⌘</Kbd>
-            <Kbd>K</Kbd>
-          </KbdGroup>
+          {!iconOnly && (
+            <>
+              <span className="flex-1 text-left">Search</span>
+              <KbdGroup aria-hidden="true">
+                <Kbd>⌘</Kbd>
+                <Kbd>K</Kbd>
+              </KbdGroup>
+            </>
+          )}
         </Button>
         {avatarSeed && (
           <BotsDialog
@@ -177,13 +195,15 @@ export function AppSidebar({ chats }: { chats: DirectChat[] }) {
                       />
                     }
                     size="lg"
-                    className="h-auto min-h-14"
+                    tooltip={chat.name}
+                    aria-label={chat.name}
+                    className="h-auto min-h-14 group-data-[collapsible=icon]:min-h-0 group-data-[collapsible=icon]:justify-center"
                   >
                     <ChatAvatar
                       seed={chat.avatarSeed}
-                      className="size-9 shrink-0"
+                      className="size-9 shrink-0 group-data-[collapsible=icon]:size-7"
                     />
-                    <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                    <span className="flex min-w-0 flex-1 flex-col gap-0.5 group-data-[collapsible=icon]:hidden">
                       <span className="flex min-w-0 items-center gap-2">
                         <span className="min-w-0 flex-1 truncate font-medium">
                           {chat.name}
@@ -215,14 +235,14 @@ export function AppSidebar({ chats }: { chats: DirectChat[] }) {
           <SidebarMenuItem>
             <SidebarMenuButton render={<div />} size="lg" className="p-0">
               <UserButton
-                showName
+                showName={!iconOnly}
                 appearance={{
                   elements: {
                     rootBox: { display: "block", width: "100%" },
                     userButtonTrigger: {
                       width: "100%",
                       height: "100%",
-                      padding: "0.5rem",
+                      padding: iconOnly ? "0.125rem" : "0.5rem",
                       borderRadius: "var(--radius-md)",
                       color: "var(--sidebar-foreground)",
                       "&:hover": {
@@ -265,6 +285,7 @@ export function AppSidebar({ chats }: { chats: DirectChat[] }) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
+      <SidebarRail />
     </Sidebar>
   )
 }
