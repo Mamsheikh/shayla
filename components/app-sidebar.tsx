@@ -5,7 +5,7 @@ import { UserButton } from "@clerk/nextjs"
 import { formatDistanceToNowStrict } from "date-fns"
 import { PlusIcon, SearchIcon, UsersRoundIcon } from "lucide-react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 
 import { BotsDialog } from "@/components/bots-dialog"
 import { ChatAvatar } from "@/components/chat-avatar"
@@ -45,6 +45,7 @@ import type { DirectChat } from "@/queries/bots"
 
 export function AppSidebar({ chats }: { chats: DirectChat[] }) {
   const router = useRouter()
+  const { chatId } = useParams<{ chatId?: string }>()
   const [botDialogOpen, setBotDialogOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [avatarSeed, setAvatarSeed] = useState<string | null>(null)
@@ -188,10 +189,12 @@ export function AppSidebar({ chats }: { chats: DirectChat[] }) {
               {chats.map((chat) => (
                 <SidebarMenuItem key={chat.id}>
                   <SidebarMenuButton
+                    isActive={chat.id === chatId}
                     render={
                       <Link
                         href={`/chats/${encodeURIComponent(chat.id)}`}
                         prefetch={false}
+                        aria-current={chat.id === chatId ? "page" : undefined}
                       />
                     }
                     size="lg"
